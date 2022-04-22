@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:experimental
+#############
+### build ###
+#############
+FROM golang as builder
+
+ADD . /go/src/edgerun/edgebenchgo-load-balancer
+WORKDIR /go/src/edgerun/edgebenchgo-load-balancer
+RUN CGO_ENABLED=0 GOARCH=arm64 go build -o /usr/local/bin/go-load-balancer cmd/go-load-balancer/main.go
+RUN chmod a+x /usr/local/bin/go-load-balancer
+
+#############
+### prod ###
+#############
+FROM aarch64/alpine
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+ENTRYPOINT go-load-balancer
