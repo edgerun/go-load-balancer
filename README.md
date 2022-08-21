@@ -1,5 +1,7 @@
 # Go Load Balancer
 
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/edgerun/go-load-balancer?color=blue&label=Docker%20version&sort=semver)
+
 The aim of this project is to provide a simple and extendable load balancer implementation to use in a Kubernetes
 cluster.
 
