@@ -156,11 +156,22 @@ func (handler *WeightedRoundRobinHandler) HandleWeightUpdate(update *WeightUpdat
 	state.Functions[update.Function] = update.Weights
 
 	wrr, err := NewWRR(update.Weights)
+	val, ok := handler.wrrInstances[update.Function]
+
+	if ok {
+		wrr, err = NewWRRWithLast(update.Weights, val.Last)
+	}
+
 	if err != nil {
 		zap.S().Error(err)
 	} else {
 		handler.wrrInstances[update.Function] = wrr
+
 		wrrWithoutGateway, _ := NewWRR(filterGateway(update.Weights))
+		val, ok := handler.wrrInstancesWithoutGateway[update.Function]
+		if ok {
+			wrrWithoutGateway, _ = NewWRRWithLast(filterGateway(update.Weights), val.Last)
+		}
 		handler.wrrInstancesWithoutGateway[update.Function] = wrrWithoutGateway
 	}
 }

@@ -12,7 +12,7 @@ type WRR struct {
 	servers []string
 	weights []int
 	mtx     sync.Mutex
-	last    int
+	Last    int
 	cw      int
 	max     int
 	gcd     int
@@ -38,7 +38,33 @@ func NewWRR(weights Weights) (*WRR, error) {
 	wrr.max = max
 	wrr.gcd = gcd
 	wrr.cw = 0
-	wrr.last = -1
+	wrr.Last = -1
+	wrr.servers = servers
+	wrr.weights = actualWeights
+	wrr.n = len(servers)
+	return &wrr, nil
+}
+
+func NewWRRWithLast(weights Weights, last int) (*WRR, error) {
+	wrr := WRR{
+		mtx: sync.Mutex{},
+	}
+	servers := []string{}
+	actualWeights := []int{}
+	for i := range weights.Ips {
+		servers = append(servers, weights.Ips[i])
+		actualWeights = append(actualWeights, weights.Weights[i])
+	}
+
+	max, errmax := max(actualWeights)
+	gcd, errgcd := gcd(actualWeights)
+	if errmax != nil || errgcd != nil {
+		return &wrr, errors.New("error calculating initial values for wrr")
+	}
+	wrr.max = max
+	wrr.gcd = gcd
+	wrr.cw = 0
+	wrr.Last = last
 	wrr.servers = servers
 	wrr.weights = actualWeights
 	wrr.n = len(servers)
@@ -99,15 +125,15 @@ func (w *WRR) Next() string {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
 	for true {
-		w.last = (w.last + 1) % w.n
-		if w.last == 0 {
+		w.Last = (w.Last + 1) % w.n
+		if w.Last == 0 {
 			w.cw -= w.gcd
 			if w.cw <= 0 {
 				w.cw = w.max
 			}
 		}
-		if w.weights[w.last] >= w.cw {
-			return w.servers[w.last]
+		if w.weights[w.Last] >= w.cw {
+			return w.servers[w.Last]
 		}
 	}
 	panic("reached a theoretically unreachable state trying to calculate the next server in WRR.Next() method")

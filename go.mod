@@ -1,6 +1,6 @@
 module edgebench/go-load-balancer
 
-go 1.17
+go 1.21
 
 require go.etcd.io/etcd v0.0.0-20200520232829-54ba9589114f
 require go.uber.org/zap v1.19.1
